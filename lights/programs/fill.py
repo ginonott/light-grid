@@ -201,3 +201,6 @@ def change_modes():
         current_mode = Modes.fade_out
     else:
         current_mode = Modes.default
+
+    animator.clear()
+    animator.add_animation(get_next_animation())

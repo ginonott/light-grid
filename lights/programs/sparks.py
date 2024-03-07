@@ -73,3 +73,5 @@ def setup():
 def change_modes():
     global clear_previous_pixels
     clear_previous_pixels = not clear_previous_pixels
+    animator.clear()
+    animator.add_animation(SparksAnimation())

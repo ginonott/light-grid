@@ -8,6 +8,13 @@ from lights.programs import fill, sparks, maze_runners, waves
 
 running = True
 
+program_to_color = {
+    fill: (255, 0, 0),
+    sparks: (0, 255, 0),
+    maze_runners: (0, 0, 255),
+    waves: (255, 255, 0)
+}
+
 def stop_program(*args, **kwargs):
     global running
     running = False
@@ -36,6 +43,7 @@ def handle_next_program_button_pressed(programs: list):
             last_clicked = now
             animator.clear()
             programs.append(programs.pop(0))
+            animator.flash_led(0, color=program_to_color[programs[0]])
             programs[0].setup()
 
     return _handler

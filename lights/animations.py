@@ -107,6 +107,20 @@ class Animator:
     def stop(self):
         self.pixels.deinit()
 
+    def flash_led(self, led: list[int], *, color: Color = (255, 0, 0), flashes: int = 3, delay: float = 0.1):
+        prev_color = self.pixels[led]
+
+        for _ in range(flashes):
+            self.pixels[led] = (0, 0, 0)
+            self.pixels.show()
+            time.sleep(delay)
+            self.pixels[led] = color
+            self.pixels.show()
+            time.sleep(delay)
+
+        self.pixels[led] = prev_color
+        self.pixels.show()
+
     def run(self):
         for animation in self.animations:
             animation.run(pixels=self.pixels, animator=self)

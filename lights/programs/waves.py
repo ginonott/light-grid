@@ -124,8 +124,10 @@ def set_next_animation():
     animations = [
         WaveGenerator(animations=[FillRow() for _ in range(10)], on_finished=lambda: set_next_animation()),
         WaveGenerator(animations=[FillRow(reversed=True) for _ in range(10)], on_finished=lambda: set_next_animation()),
+        WaveGenerator(animations=[FillRow(reversed=(i % 2 == 0)) for i in range(10)], on_finished=lambda: set_next_animation()),
         WaveGenerator(animations=[FillColumn() for _ in range(10)], on_finished=lambda: set_next_animation()),
         WaveGenerator(animations=[FillColumn(reversed=True) for _ in range(10)], on_finished=lambda: set_next_animation()),
+        WaveGenerator(animations=[FillColumn(reversed=(i % 2 == 0)) for i in range(10)], on_finished=lambda: set_next_animation()),
         WaveGenerator(animations=[FillColumn() if i % 2 == 0 else FillRow() for i in range(10)], on_finished=lambda: set_next_animation()),
         WaveGenerator(animations=[FillColumn(reversed=True) if i % 2 == 0 else FillRow(reversed=True) for i in range(10)], on_finished=lambda: set_next_animation()),
         WaveGenerator(animations=[FillColumn() if i % 2 == 0 else FillRow(reversed=True) for i in range(10)], on_finished=lambda: set_next_animation()),
@@ -140,4 +142,6 @@ def setup():
 
 
 def change_modes():
+    animator.clear()
     current_mode.append(current_mode.pop(0))
+    set_next_animation()
