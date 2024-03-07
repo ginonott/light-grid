@@ -72,5 +72,4 @@ def setup():
 
 def change_modes():
     global clear_previous_pixels
-    print("here!")
     clear_previous_pixels = not clear_previous_pixels

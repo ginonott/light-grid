@@ -22,6 +22,23 @@ grid = [
     [50  , 51  , 52  , 53  , 54  , 55  , None, None, None, None, 95  , None, None, None, None, None, None, 0   ], # 19
 ]
 
+def get_leds_in_row(r: int):
+    s = set()
+
+    for led in grid[r]:
+        if led is not None:
+            s.add(led)
+
+    return s
+
+def get_leds_in_column(c: int):
+    s = set()
+    for row in grid:
+        if (led := row[c]) is not None:
+            s.add(led)
+
+    return s
+
 def get_leds_above_row(r: int) -> set[int]:
     s = set()
     for row_num, row in enumerate(grid):

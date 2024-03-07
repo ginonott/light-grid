@@ -1,3 +1,4 @@
+from datetime import datetime, timedelta
 from typing import Callable, Literal, TypeAlias
 import time
 
@@ -5,9 +6,17 @@ from neopixel import NeoPixel
 import board
 import colors
 
+from lights.timing import is_after
+
 Color: TypeAlias = tuple[int, int, int] | list[int, int, int]
 OnFinished: TypeAlias = Callable[[], None] | None
 wheel = colors.ColorWheel()
+
+def to_pixel(color: colors.Color):
+    return tuple([int(c) for c in color.rgb])
+
+def get_random_color():
+    return to_pixel(wheel.next())
 
 class Animation:
     _finished: bool
@@ -21,10 +30,10 @@ class Animation:
         )
 
     def to_pixel(self, color: colors.Color):
-        return tuple([int(c) for c in color.rgb])
+        return to_pixel(color)
 
     def get_random_color(self):
-        return self.to_pixel(wheel.next())
+        return get_random_color()
 
     def transition(self, from_color: tuple[int, int, int], to_color: tuple[int, int, int], step: int = 20):
         next_color = [0, 0, 0]

@@ -1,104 +1,75 @@
-# from random import choice
-# from maze import LedMaze, maze
+from random import choice
+from typing import Callable
+from datetime import datetime, timedelta
 
-# import time
-# import board
-# import neopixel
-# import colors
+from neopixel import NeoPixel
+from lights.animations import Animation, Animator, Color, animator, get_random_color
+from lights.layout.maze import maze
 
+class MazeRunner:
+    prev_location: int
+    location: int
+    color: Color
+    last_ticked: datetime
+    delay: timedelta
 
-# def fade_out(curr_color, step=int(255 / 12)):
-#     return (
-#         max(curr_color[0] - step, 0),
-#         max(curr_color[1] - step, 0),
-#         max(curr_color[2] - step, 0),
-#     )
+    def __init__(
+        self, color: Color, starting_location: int
+    ):
+        self.last_ticked = datetime(1970, 1, 1)
+        self.delay = timedelta(milliseconds=100)
+        self.location = starting_location
+        self.prev_location = starting_location
+        self.color = color
 
-# def to_pixel(color: colors.Color):
-#     return tuple([int(c) for c in color.rgb])
-
-
-# class MazeRunner:
-#     prev_location: int
-#     location: int
-#     maze: LedMaze
-#     color: colors.Color
-#     flip: bool
-
-#     def __init__(
-#         self, maze: LedMaze, color: colors.Color, starting_location: int
-#     ):
-#         self.location = starting_location
-#         self.prev_location = starting_location
-#         self.maze = maze
-#         self.color = color
-#         self.flip = False
-
-#     def tick(self):
-#         if self.flip:
-#             self.flip = False
-#             return
+    def tick(self):
+        if self.last_ticked + self.delay < datetime.now():
+            self.last_ticked = datetime.now()
+        else:
+            return
         
-#         new_location: int
-#         node = self.maze.graph[self.location]
-#         match node:
-#             case [prev, turn, next]:
-#                 new_location = choice(list({prev, turn, next} - {self.prev_location}))
-#             case [prev, next]:
-#                 if self.prev_location == prev:
-#                     new_location = next
-#                 else:
-#                     new_location = prev
-#             case [back]:
-#                 new_location = back
+        new_location: int
+        node = maze.graph[self.location]
+        match node:
+            case [prev, turn, next]:
+                new_location = choice(list({prev, turn, next} - {self.prev_location}))
+            case [prev, next]:
+                if self.prev_location == prev:
+                    new_location = next
+                else:
+                    new_location = prev
+            case [back]:
+                new_location = back
+                self.color = get_random_color()
 
-#         self.prev_location = self.location
-#         self.location = new_location
-#         self.flip = True
-
-#     def rgb(self):
-#         return to_pixel(self.color)
+        self.prev_location = self.location
+        self.location = new_location
 
 
+class MazeRunnerAnimation(Animation):
+    maze_runners: list[MazeRunner]
+
+    def __init__(self, *, on_finished: Callable[[], None] | None = None) -> None:
+        super().__init__(on_finished=on_finished)
+
+        self.maze_runners = [
+            MazeRunner(self.get_random_color(), location) for location in maze.dead_ends
+        ]
+        self.maze_runners = self.maze_runners[0:3]
+
+    def run(self, pixels: NeoPixel, animator: Animator) -> None:
+        maze_runner_locations: set[int] = set()
+        for maze_runner in self.maze_runners:
+            maze_runner.tick()
+            location = maze_runner.location
+            maze_runner_locations.add(location)
+            pixels[location] = maze_runner.color
 
 
-# pixels = neopixel.NeoPixel(board.D18, 105, auto_write=False, brightness=0.2)
-# pixels.fill((0, 0, 0))
+        for led in range(len(pixels)):
+            if led not in maze_runner_locations:
+                pixels[led] = self.fade_out(pixels[led], step=5)
 
-# wheel = colors.ColorWheel()
-# runner_colors = [
-#     wheel.next(),
-#     wheel.next(),
-#     wheel.next(),
-#     wheel.next(),
-#     wheel.next(),
-#     wheel.next(),
-# ]
-# maze_runners = [
-#     MazeRunner(maze, runner_colors.pop(), location) for location in maze.dead_ends
-# ]
 
-# while True:
-#     maze_runner_locations: dict[int, MazeRunner] = {}
-#     for maze_runner in maze_runners:
-#         maze_runner.tick()
-#         location = maze_runner.location
-
-#         if other := maze_runner_locations.get(location):
-#             pixels[location] = to_pixel(maze_runner.color.overlay(other.color))
-#         else:
-#             r, g, b = pixels[location]
-#             if (r, g, b) != (0, 0, 0):
-#                 c = colors.RGBColor(r, g, b)
-#                 pixels[location] = to_pixel(maze_runner.color.overlay(c))
-#             else:
-#                 pixels[location] = to_pixel(maze_runner.color)
-            
-#         maze_runner_locations[maze_runner.location] = maze_runner
-
-#     for led in range(len(pixels)):
-#         if led not in maze_runner_locations:
-#             pixels[led] = fade_out(pixels[led], step=5)
-
-#     pixels.show()
-#     time.sleep(1 / 24)
+def setup():
+    animator.add_animation(MazeRunnerAnimation())

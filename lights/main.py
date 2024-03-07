@@ -4,7 +4,7 @@ from datetime import datetime, timedelta
 from gpiozero import Button
 from signal import signal, SIGINT, SIGHUP, SIGTERM
 from lights.animations import animator
-from lights.programs import fill, sparks
+from lights.programs import fill, sparks, maze_runners, waves
 
 running = True
 
@@ -58,7 +58,7 @@ def main(interactive: bool):
     brightness_options = [0.5, 0.4, 0.3, 0.2, 0.1, 0.0]
     animator.init_pixels(105, brightness=brightness_options[0])
 
-    programs = [fill, sparks]
+    programs = [waves, maze_runners, fill, sparks]
     programs[0].setup()
 
     brightness_button = Button(17)
