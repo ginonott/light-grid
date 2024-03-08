@@ -86,7 +86,7 @@ class LavaLampAnimation(Animation):
     def __init__(self, *, on_finished: Callable[[], None] | None = None) -> None:
         super().__init__(on_finished=on_finished)
 
-        self.lava_lamp_blobs = [LavaLampBlob(location) for location in range(len(animator.pixels)) if location % 5 == 0]
+        self.lava_lamp_blobs = [LavaLampBlob(location) for location in range(len(animator.pixels)) if location % 10 == 0]
         self.background_color = self.get_random_color()
         self.background_color_switched_at = datetime.now()
 

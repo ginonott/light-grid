@@ -12,8 +12,8 @@ def is_before(last_run: datetime, delta: timedelta):
 class Interval:
     interval: timedelta
     last_run: datetime
-    def __init__(self, interval: timedelta) -> None:
-        self.last_run = datetime.now()
+    def __init__(self, interval: timedelta, immediate=True) -> None:
+        self.last_run = datetime.now() - interval if immediate else datetime.now()
         self.interval = interval
 
     def is_ready(self):

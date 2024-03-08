@@ -6,7 +6,7 @@ from typing import Callable, Literal
 from neopixel import NeoPixel
 from lights.animations import Animation, Animator, Color, animator
 from lights.layout.grid import get_leds_in_row, get_leds_in_column, grid
-from lights.timing import is_after, AnimationTiming
+from lights.timing import Interval, is_after, AnimationTiming
 
 DEFAULT_DELTA = timedelta(milliseconds=150)
 DEFAULT_WAVE_DELAY = timedelta(seconds=2)
@@ -96,20 +96,18 @@ class FillColumn(Animation, AnimationTiming):
             self.finished()
 
 class WaveGenerator(Animation):
-    delay_between_waves: timedelta = DEFAULT_WAVE_DELAY
-    last_wave: datetime
+    wave_interval: Interval
     animations: list[Animation]
     current_animation: int
 
     def __init__(self, animations: list[Animation], *, on_finished: Callable[[], None] | None = None) -> None:
         super().__init__(on_finished=on_finished)
-        self.last_wave = datetime.now() - self.delay_between_waves
+        self.wave_interval = Interval(DEFAULT_WAVE_DELAY)
         self.animations = animations
         self.current_animation = 0
 
     def run(self, pixels: NeoPixel, animator: Animator) -> None:
-        if is_after(self.last_wave, self.delay_between_waves) and self.current_animation < len(self.animations):
-            self.last_wave = datetime.now()
+        if self.wave_interval.is_ready() and self.current_animation < len(self.animations):
             animator.add_animation(self.animations[self.current_animation])
             self.current_animation += 1
 

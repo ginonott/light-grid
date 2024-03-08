@@ -1,31 +1,28 @@
-from random import choice
+from random import choice, randint
 from typing import Callable
 from datetime import datetime, timedelta
 
 from neopixel import NeoPixel
 from lights.animations import Animation, Animator, Color, animator, get_random_color
 from lights.layout.maze import maze
+from lights.timing import Interval
 
 class MazeRunner:
     prev_location: int
     location: int
     color: Color
-    last_ticked: datetime
-    delay: timedelta
+    move_interval: Interval
 
     def __init__(
         self, color: Color, starting_location: int
     ):
-        self.last_ticked = datetime(1970, 1, 1)
-        self.delay = timedelta(milliseconds=100)
         self.location = starting_location
         self.prev_location = starting_location
         self.color = color
+        self.move_interval = Interval(timedelta(milliseconds=choice(100, 200, 300, 400, 500)))
 
     def tick(self):
-        if self.last_ticked + self.delay < datetime.now():
-            self.last_ticked = datetime.now()
-        else:
+        if not self.move_interval.is_ready():
             return
         
         new_location: int
