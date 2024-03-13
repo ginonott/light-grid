@@ -1,10 +1,11 @@
+import time
 import click
 from datetime import datetime, timedelta
 
 from gpiozero import Button
 from signal import signal, SIGINT, SIGHUP, SIGTERM
 from lights.animations import animator
-from lights.programs import fill, sparks, maze_runners, waves, lava_lamp
+from lights.programs import fill, sparks, maze_runners, waves, lava_lamp, lightning
 from lights.timing import Interval
 
 running = True
@@ -59,10 +60,12 @@ def handle_options_button_pressed(programs: list):
 @click.command()
 @click.option("-i", "--interactive", is_flag=True, default=False)
 def main(interactive: bool):
+    reset_interval = Interval(timedelta(minutes=60))
+
     brightness_options = [1, 0.8, 0.6, 0.4, 0.2, 0]
     animator.init_pixels(105, brightness=brightness_options[0])
 
-    programs = [lava_lamp, waves, maze_runners, fill, sparks]
+    programs = [lightning, lava_lamp, waves, maze_runners, fill, sparks]
     programs[0].setup()
 
     brightness_button = Button(17)
@@ -75,6 +78,15 @@ def main(interactive: bool):
     options_button.when_pressed = handle_options_button_pressed(programs)
 
     while running:
+        # no point in doing anything if you can't see it
+        if brightness_options[0] == 0:
+            time.sleep(1/60)
+
+        if reset_interval.is_ready():
+            # re-setup the running program
+            animator.clear()
+            programs[0].setup()
+
         animator.run()
         if interactive:
             input("> ")

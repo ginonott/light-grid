@@ -19,7 +19,7 @@ class MazeRunner:
         self.location = starting_location
         self.prev_location = starting_location
         self.color = color
-        self.move_interval = Interval(timedelta(milliseconds=choice(100, 200, 300, 400, 500)))
+        self.move_interval = Interval(timedelta(milliseconds=choice((100, 200, 300, 400, 500))))
 
     def tick(self):
         if not self.move_interval.is_ready():

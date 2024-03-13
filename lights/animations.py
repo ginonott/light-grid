@@ -18,6 +18,13 @@ def to_pixel(color: colors.Color):
 def get_random_color():
     return to_pixel(wheel.next())
 
+def get_inverted_color(color: Color):
+    return (
+        255 - color[0],
+        255 - color[1],
+        255 - color[2]
+    )
+
 class Animation:
     _finished: bool
     _on_finished: Callable[[], None] | None
@@ -34,6 +41,9 @@ class Animation:
 
     def get_random_color(self):
         return get_random_color()
+    
+    def get_inverted_color(self, color: Color):
+        return get_inverted_color(color)
 
     def transition(self, from_color: tuple[int, int, int], to_color: tuple[int, int, int], step: int = 20):
         next_color = [0, 0, 0]
@@ -162,15 +172,18 @@ class AnimationGroup(Animation):
 
 
 class FadeOutAnimation(Animation):
-    def __init__(self, *, on_finished: Callable[[], None] | None = None) -> None:
+    step: int
+
+    def __init__(self, *, step: int = 10, on_finished: Callable[[], None] | None = None) -> None:
         super().__init__(on_finished=on_finished)
+        self.step = step
 
     def run(self, pixels: NeoPixel, animator: Animator) -> None | Animation | None:
         is_faded_out = True
 
         for led, pixel in enumerate(pixels):
             if not self.compare_color(pixel, (0, 0, 0)):
-                pixels[led] = self.fade_out(pixel)
+                pixels[led] = self.fade_out(pixel, step=self.step)
                 is_faded_out = False
 
         if is_faded_out:

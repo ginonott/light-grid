@@ -13,10 +13,10 @@ max_switch_time = timedelta(seconds=120)
 color_switch_time = timedelta(seconds=30)
 
 class Modes(Enum):
-    with_background = auto()
-    without_background = auto()
+    inverted = auto()
+    rainbow = auto()
 
-modes = [Modes.without_background, Modes.with_background]
+modes = [Modes.inverted, Modes.rainbow]
 
 class LavaLampBlob:
     location: list[int]
@@ -33,7 +33,7 @@ class LavaLampBlob:
         self.direction = choice((-1, 1))
         self.switch_interval = FuzzyInterval(60, 120)
         self.color_interval = FuzzyInterval(60, 240)
-        self.move_interval = Interval(timedelta(seconds=randint(2, 6)))
+        self.move_interval = Interval(timedelta(seconds=randint(1, 3)))
         self.grow_interval = FuzzyInterval(30, 120)
         self.size = randint(2, 4)
 
@@ -41,9 +41,8 @@ class LavaLampBlob:
         if not self.move_interval.is_ready():
             return
         
-        if self.color_interval.is_ready():
+        if modes[0] == Modes.rainbow and self.color_interval.is_ready():
             self.color = get_random_color()
-    
 
         # tiny chance we shrink or grow
         if self.grow_interval.is_ready():
@@ -81,14 +80,22 @@ class LavaLampBlob:
 class LavaLampAnimation(Animation):
     lava_lamp_blobs: list[LavaLampBlob]
     background_color: Color
-    background_color_switched_at: datetime
+    background_color_change_interval: FuzzyInterval
 
     def __init__(self, *, on_finished: Callable[[], None] | None = None) -> None:
         super().__init__(on_finished=on_finished)
 
         self.lava_lamp_blobs = [LavaLampBlob(location) for location in range(len(animator.pixels)) if location % 10 == 0]
         self.background_color = self.get_random_color()
-        self.background_color_switched_at = datetime.now()
+        self.background_color_change_interval = FuzzyInterval(10, 30)
+
+        if modes[0] == Modes.inverted:
+            self.invert_blob_colors()
+
+    def invert_blob_colors(self):
+        inverted_color = self.get_inverted_color(self.background_color)
+        for blob in self.lava_lamp_blobs:
+            blob.color = inverted_color
 
     def run(self, pixels: NeoPixel, animator: Animator) -> None:
         locations: set[int] = set()
@@ -100,11 +107,12 @@ class LavaLampAnimation(Animation):
 
         for led in range(len(pixels)):
             if led not in locations:
-                pixels[led] = self.transition(pixels[led], self.background_color if modes[0] == Modes.with_background else (0, 0, 0), step=1)
+                pixels[led] = self.transition(pixels[led], self.background_color, step=1)
 
-        if is_after(self.background_color_switched_at, color_switch_time):
+        if self.background_color_change_interval.is_ready():
             self.background_color = self.get_random_color()
-            self.background_color_switched_at = datetime.now()
+            if modes[0] == Modes.inverted:
+                self.invert_blob_colors()
 
 
 
@@ -112,4 +120,6 @@ def setup():
     animator.add_animation(LavaLampAnimation())
 
 def change_modes():
+    animator.clear()
     modes.append(modes.pop(0))
+    animator.add_animation(LavaLampAnimation())

@@ -1,39 +1,10 @@
 from typing import Callable
 from lights.animations import Animation, Animator, Color, animator
-from lights.layout.maze import LedMaze, maze
+from lights.layout.maze import maze
 from random import shuffle
 import neopixel
 
 clear_previous_pixels = False
-
-def find_path(maze: LedMaze, start: int, end: int) -> list[int]:
-    def _find_path(prev_pos: int, cur_pos: int, path: list[int]) -> bool:
-        path.append(cur_pos)
-
-        if cur_pos == end:
-            return True
-        
-        # no backtracking
-        options = set(maze.graph[cur_pos]) - {prev_pos}
-
-        # no where left to go
-        if not options:
-            return False
-        
-        for opt in options:
-            found_path = _find_path(cur_pos, opt, path)
-
-            if found_path:
-                return True
-            else:
-                path.pop()
-
-        # path.append(prev_pos)
-        return False
-    
-    path = [start]
-    _find_path(start, start, path)
-    return path
 
 class SparksAnimation(Animation):
     path: list[int]
@@ -47,7 +18,7 @@ class SparksAnimation(Animation):
         start, stop = dead_ends.pop(), dead_ends.pop()
 
     
-        self.path = find_path(maze, start, stop)
+        self.path = maze(start, stop)
         self.color = self.get_random_color()
 
     def run(self, pixels: neopixel.NeoPixel, animator: Animator) -> None:
